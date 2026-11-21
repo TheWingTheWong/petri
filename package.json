@@ -1,0 +1,14 @@
+{
+  "name": "petri",
+  "version": "1.0.0",
+  "description": "Particle-life microscope: thousands of particles, one asymmetric attraction table, emergent life. WebGL2 GPU engine and in-browser evolution.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node serve.mjs 8080"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
