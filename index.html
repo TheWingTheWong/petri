@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0c0e">
+<title>Petri</title>
+<style>  :root {
+    --body: #0b0c0e; --metal: #15171b; --line: #2a2d33; --line-2: #3a3e46;
+    --bone: #e9e4d6; --dim: #8d8a80; --faint: #5c5a54; --amber: #ffb020; --pos: #35e0a1; --neg: #ff5c7a;
+    --mono: "Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--body); color: var(--bone); font: 13px/1.5 var(--mono); }
+  main { max-width: 1240px; margin: 0 auto; padding: 22px 16px 36px; }
+
+  header { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap;
+           border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  h1 { margin: 0; font: 700 44px/0.9 "Bricolage", sans-serif; letter-spacing: -0.04em; }
+  h1 sup { font: 600 11px var(--mono); letter-spacing: .1em; color: var(--amber); vertical-align: top; margin-left: 6px; }
+  .dek { color: var(--dim); margin-top: 6px; max-width: 560px; }
+  .spec { text-align: right; color: var(--dim); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; line-height: 1.7; }
+  .spec b { color: var(--bone); font-weight: 600; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 26px; margin-top: 22px; align-items: start; }
+  @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+  .stage { position: relative; }
+  canvas#dish { width: 100%; aspect-ratio: 1; display: block; cursor: none; touch-action: none; }
+  .dishwrap { position: relative; }
+  canvas#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+  canvas#dish { position: relative; z-index: 1; }
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+  .gallery .empty { grid-column: 1 / -1; border: 1px dashed var(--line-2); color: var(--faint); padding: 14px; font-size: 11.5px; text-align: center; }
+  .find { position: relative; padding: 0; border: 1px solid var(--line-2); background: #040507; cursor: pointer; }
+  .find:hover { border-color: var(--bone); }
+  .find.sel { border-color: var(--amber);  }
+  .find canvas { width: 100%; aspect-ratio: 1; display: block; }
+  .find span { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 5px; background: #040507cc; color: var(--bone);
+               font: 600 10px var(--mono); text-align: left; }
+  .hint { color: var(--faint); font-size: 11.5px; text-align: center; margin-top: 8px; letter-spacing: .04em; }
+
+  .panel { border: 1px solid var(--line); background: var(--metal); }
+  .panel + .panel { margin-top: 14px; }
+  .panel h2 { margin: 0; padding: 9px 12px; font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase;
+              color: var(--dim); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+  .panel h2 em { font-style: normal; color: var(--faint); letter-spacing: .04em; text-transform: none; }
+  .pad { padding: 12px; }
+
+  .matrix { display: grid; gap: 2px; user-select: none; }
+  .mh { display: grid; place-items: center; font-size: 10.5px; color: var(--dim); height: 22px; }
+  .mh i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .mc { aspect-ratio: 1; border: 0; padding: 0; font: 600 10.5px var(--mono); color: var(--bone); cursor: pointer;
+        background: #1c1e23; position: relative;  }
+  .mc:hover { outline: 1px solid var(--bone); outline-offset: -1px; z-index: 1; }
+  .mc:active { transform: scale(.94); }
+  .mc span { position: relative;  }
+  .legend { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 11px; color: var(--dim); }
+  .bar { flex: 1; height: 6px; margin: 0 10px; background: linear-gradient(90deg, var(--neg), #1c1e23 50%, var(--pos)); }
+  .how { color: var(--faint); font-size: 11px; margin-top: 8px; line-height: 1.6; }
+
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .row + .row { margin-top: 6px; }
+  button.b { appearance: none; background: transparent; color: var(--bone); border: 1px solid var(--line-2); padding: 7px 8px;
+             font: 600 11.5px var(--mono); letter-spacing: .04em; cursor: pointer; text-align: left; display: flex; justify-content: space-between; }
+  button.b:hover { border-color: var(--bone); }
+  button.b:focus-visible, .mc:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.b.on { background: var(--bone); color: var(--body); border-color: var(--bone); }
+  button.b kbd { font: 400 10.5px var(--mono); color: var(--faint); }
+  button.b.on kbd { color: #555; }
+  button.b.hot { border-color: var(--amber); color: var(--amber); }
+
+  .slider { display: grid; grid-template-columns: 82px 1fr 44px; gap: 10px; align-items: center; }
+  .slider + .slider { margin-top: 8px; }
+  .slider label { color: var(--dim); font-size: 11.5px; }
+  .slider output { text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--amber); height: 18px; }
+
+  footer { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 10px; color: var(--faint); font-size: 11px;
+           display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; letter-spacing: .04em; }
+  footer a { color: var(--dim); }
+  #toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--bone); color: var(--body);
+           padding: 8px 14px; font-weight: 600; opacity: 0;  pointer-events: none; }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Petri<sup>FIELD 01</sup></h1>
+      <div class="dek">Artificial life under glass. A few thousand particles and one table of attractions, with no behaviour scripted. Everything that moves like it’s alive comes out of that table.</div>
+    </div>
+    <div class="spec">Specimen <b id="specId">—</b> · Engine <b id="specE">—</b><br>Species <b id="specK">—</b> · Particles <b id="specN">—</b></div>
+  </header>
+
+  <div class="layout">
+    <section class="stage">
+      <div class="dishwrap"><canvas id="gl" aria-hidden="true"></canvas><canvas id="dish" aria-label="Simulation field"></canvas></div>
+      <div class="hint">Drag to pull particles with the pipette. Shift-drag or right-drag pushes them away.</div>
+    </section>
+
+    <aside>
+      <div class="panel">
+        <h2>Interaction matrix <em>row feels column</em></h2>
+        <div class="pad">
+          <div class="matrix" id="matrix"></div>
+          <div class="legend"><span>−1 repel</span><span class="bar"></span><span>attract +1</span></div>
+          <div class="how">Click a cell for +0.2, right-click for −0.2, scroll for ±0.1, alt-click to zero it. The table is asymmetric: A can chase B while B runs from A.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Specimens</h2>
+        <div class="pad">
+          <div class="row">
+            <button class="b hot" id="randBtn">Random <kbd>R</kbd></button>
+            <button class="b" id="mutBtn">Mutate <kbd>M</kbd></button>
+            <button class="b" id="reseedBtn">Reseed <kbd>S</kbd></button>
+          </div>
+          <div class="row" id="presets"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Evolution <em id="evoStat">idle</em></h2>
+        <div class="pad">
+          <div class="row"><button class="b hot" id="evoBtn" style="grid-column: span 3">Start evolving <kbd>E</kbd></button></div>
+          <div class="gallery" id="gallery"></div>
+          <div class="how">Petri breeds new attraction tables in the background and scores each one for life-likeness: lumpy, moving, and moving together. It keeps the best distinct finds. Click one to put it under the microscope.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Conditions</h2>
+        <div class="pad">
+          <div class="slider"><label for="kIn">Species</label><input id="kIn" type="range" min="2" max="8" step="1"><output id="kOut"></output></div>
+          <div class="slider"><label for="nIn">Particles</label><input id="nIn" type="range" min="400" max="6000" step="100"><output id="nOut"></output></div>
+          <div class="slider"><label for="rIn">Reach</label><input id="rIn" type="range" min="0.02" max="0.16" step="0.005"><output id="rOut"></output></div>
+          <div class="slider"><label for="fIn">Viscosity</label><input id="fIn" type="range" min="0.01" max="0.2" step="0.01"><output id="fOut"></output></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Instrument</h2>
+        <div class="pad">
+          <div class="row">
+            <button class="b" id="pauseBtn">Pause <kbd>␣</kbd></button>
+            <button class="b" id="trailBtn">Trails <kbd>T</kbd></button>
+            <button class="b" id="stepBtn">Step <kbd>.</kbd></button>
+          </div>
+          <div class="row">
+            <button class="b" id="shareBtn" style="grid-column: span 2">Copy share link <kbd>L</kbd></button>
+            <button class="b" id="pngBtn">Photo <kbd>P</kbd></button>
+          </div>
+          <div class="row"><button class="b" id="engineBtn" style="grid-column: span 3">Engine: CPU <kbd>G</kbd></button></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer><span>Particle life: an asymmetric short-range force on a torus, with a spatial-hash neighbour search, running in your browser.</span></footer>
+</main>
+<div id="toast" role="status"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
