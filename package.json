@@ -6,7 +6,12 @@
   "private": true,
   "scripts": {
     "start": "node serve.mjs 8080",
-    "test": "node --test test/sim.test.js test/evolve.test.js"
+    "test": "node --test test/sim.test.js test/evolve.test.js",
+    "test:e2e": "node test/smoke.mjs && node test/gpu-parity.mjs",
+    "test:all": "npm test && npm run test:e2e"
+  },
+  "devDependencies": {
+    "playwright": "^1.65.1"
   },
   "engines": {
     "node": ">=20"
