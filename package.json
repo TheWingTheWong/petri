@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "node serve.mjs 8080",
-    "test": "node --test test/sim.test.js"
+    "test": "node --test test/sim.test.js test/evolve.test.js"
   },
   "engines": {
     "node": ">=20"
